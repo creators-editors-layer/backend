@@ -16,3 +16,10 @@ POST /api/workspaces/:workspaceId/submissions/:submissionId/approve
 
 POST /api/workspaces/:workspaceId/submissions/:submissionId/reject  
 - Returns: {message, submission}
+
+Think of your product flow backwards from the money:
+
+YouTuber pays you → needs approval system working
+Approval system → needs submissions to approve
+Submissions → need workspace to belong to
+Workspace → needs users who can create it
