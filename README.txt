@@ -2,6 +2,9 @@ GET /health
 - Returns: "OK"
 
 GET /api/workspaces  
+- Returns: [workspaces]
+
+GET /api/workspaces/:id
 - Returns: [{id, name, creator_id, submissions[]}]
 
 POST /api/workspaces/:id
