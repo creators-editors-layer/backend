@@ -1,0 +1,12 @@
+//this is a fancy way to document new things i learn while building this project
+
+Jul 1
+finished db integration and schema design
+i should create a branch and start building CRUD operations for workspaces 
+
+and this is how we do it:
+git fetch origin
+git checkout main
+git pull origin main
+git checkout -b feature/workspace-crud
+

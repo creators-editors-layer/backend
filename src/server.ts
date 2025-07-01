@@ -1,6 +1,6 @@
 import express from 'express';
-import cors from 'cors';
-import workspaceRoutes from './routes/workRoutes'
+import cors from 'cors'
+import workspaceRoutes from './routes/workspaceRoutes';
 
 export const app = express();
 
@@ -14,3 +14,5 @@ app.get('/health', (_req, res) => {
 
 // Mount routes
 app.use('/api/workspaces', workspaceRoutes);
+
+export default app

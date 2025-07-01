@@ -1,7 +1,15 @@
 import {Request, Response, NextFunction} from 'express'
-import supabase from '../db'
+import { createClient } from '@supabase/supabase-js'
 import { DatabaseUser } from '../types'
 import { User } from '@supabase/supabase-js';
+import dotenv from 'dotenv'
+
+dotenv.config()
+
+const PROJECT_URL = process.env.SUPABASE_URL!
+const ANON_KEY = process.env.SUPABASE_ANON_KEY!
+
+const supabase = createClient(PROJECT_URL, ANON_KEY)
 
 interface AuthRequest extends Request {
     user?:User
