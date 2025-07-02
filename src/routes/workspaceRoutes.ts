@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import {Request, Response} from 'express'
-import type { users as User,  workspaces as Workspace } from '../generated/prisma/client';;
-import {db} from '../db'
+import type { users as User,  workspaces as Workspace } from '../generated/prisma/client.js';;
+import {db} from '../db/index.js'
+
+import { ApiResponse } from '../types/api.js';
 
 const router = Router();
 
@@ -9,58 +11,153 @@ interface WorkspaceRequest extends Request {
     user?:User
 }
 
+//create workspace -> get workspace by id -> get submissions of a workspace -> 
+
 // GET all workspaces
-router.get('/', async (req:WorkspaceRequest, res:Response<Workspace[]>) => {
+router.get('/', async (req:WorkspaceRequest, res:any) => {
     const user = req.user!
 
     const workspaces = await db.workspaces.findMany({
         where:{
             OR:[
                 { creator_id: user.id },
-                {workspace_memebers:{some:{user_id:user.id}}}
+                {workspace_members:{some:{user_id:user.id}}}
             ]
         }
     })
-  res.status(200).json(workspaces);
+
+    res.status(200).json(workspaces);
 });
 
-// // POST a submission to a workspace
-// router.post('/:id', (req, res) => {
-//     const {id} = req.params as {id:string}
+//create a workspace
+router.post('/', async (req:Request, res:any) => {
+    const user = req.user!
+    const {name} = req.body
 
-//     const {submission} = req.body as {submission:Submission}
+    const exits = await db.workspaces.findFirst({
+        where:{
+                name,
+                creator_id: user.id,
+        }
+    })
 
-//     const workspace = workspaces.find(w => w.id == req.params.id);
-//     if (!workspace) return res.status(404).json({ message: 'Workspace not found' });
+    if (exits){
+        return res.status(409).json({success:false, error:{message: "the workspace name already exists, try another name"}});
+    }
 
-//     workspace.s.push(submission);
-//     res.status(200).json({ message: 'Submission added', workspace });
-// });
+    const workspace = await db.workspaces.create({
+        data:{
+            name,
+            creator_id:user.id
+        }
+    })
+  return res.status(201).json({ success: true, data: workspace });
+});
 
-// // Approve a submission
-// router.post('/:workspaceId/submissions/:submissionId/approve', (req, res) => {
-//   const workspace = workspaces.find(w => w.id == req.params.workspaceId);
-//   if (!workspace) return res.status(404).json({ error: 'Workspace not found' });
+//get submission from workspace a specific workspace
+router.get('/:id/submissions', async(req:Request, res:any)=>{
+    const user = req.user!
+    const { id } = req.params
 
-//   const submission = workspace.submissions.find(s => s.id == req.params.submissionId);
-//   if (!submission) return res.status(404).json({ error: 'Submission not found' });
+    //check if the user has access
+    const hasAccess = await db.workspaces.findFirst({
+        where:{
+            id,
+            OR:[
+                {creator_id:user.id},
+                {workspace_members:{some:{user_id:user.id}}}
+            ]
+        }
+    })
 
-//   submission.status = 'approved';
-//   submission.approved_at = Date.now().toString();
-//   res.json({ message: 'Submission approved', submission });
-// });
+    if (!hasAccess) {
+     res.status(403).json({ error: 'Access denied: Not a member of this workspace.' });
+     return
+    }
 
-// // Reject a submission
-// router.post('/:workspaceId/submissions/:submissionId/reject', (req, res) => {
-//   const workspace = workspaces.find(w => w.id == req.params.workspaceId);
-//   if (!workspace) return res.status(404).json({ error: 'Workspace not found' });
+    //check if the user belongs to a workspace and return all submissions
+    const submissions = await db.submissions.findMany({
+        where:{ workspace_id:id },
+        orderBy:{submitted_at:'desc'}
+    })
 
-//   const submission = workspace.submissions.find(s => s.id == req.params.submissionId);
-//   if (!submission) return res.status(404).json({ error: 'Submission not found' });
+    
 
-//   submission.status = 'rejected';
-//   submission.rejected_at = Date.now().toString();
-//   res.json({ message: 'Submission rejected', submission });
-// });
+    return res.status(200).json({ success: true, data: submissions })
+
+})
+
+router.get('/:workspaceId/submissions/:submissionId', async(req:Request, res:any)=>{
+    const user = req.user!
+    const { workspaceId, submissionId } = req.params
+
+    //check if the user has access
+    const hasAccess = await db.workspaces.findFirst({
+        where:{
+            id:workspaceId,
+            OR:[
+                {creator_id:user.id},
+                {workspace_members:{some:{user_id:user.id}}}
+            ]
+        }
+    })
+
+    if (!hasAccess) {
+     res.status(403).json({ error: 'Access denied: Not a member of this workspace.' });
+     return
+    }
+
+    const submission = await db.submissions.findFirst({
+        where:{
+            id:submissionId,
+            workspace_id:workspaceId
+        }
+    })
+
+    if (!submission) {
+        return res.status(404).json({ success: false, error: 'Submission not found' })
+    }
+
+    return res.status(201).json({ success: true, data: submission });
+
+})
+
+router.post('/:workspaceId/submissions', async(req:Request, res:any)=>{
+    const user = req.user!
+    const { workspaceId } = req.params
+    const {title, description, video_url, thumbnail_url} = req.body
+
+    //check if the user has access
+    const hasAccess = await db.workspaces.findFirst({
+        where:{
+            id:workspaceId,
+            OR:[
+                {creator_id:user.id},
+                {workspace_members:{some:{user_id:user.id}}}
+            ]
+        }
+    })
+
+    if (!hasAccess) {
+     res.status(403).json({ error: 'Access denied: Not a member of this workspace.' });
+     return
+    }
+
+    //create a submission
+    const submission = await db.submissions.create({
+        data: {
+            workspace_id: workspaceId,
+            uploader_id: user.id,
+            title,
+            description,
+            video_url,
+            thumbnail_url,
+            status: 'pending'
+        }
+    })
+
+    res.status(201).json({success:true, data:submission})
+})
+
 
 export default router;

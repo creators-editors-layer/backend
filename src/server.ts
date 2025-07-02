@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors'
-import workspaceRoutes from './routes/workspaceRoutes';
+import workspaceRoutes from './routes/workspaceRoutes.js';
+import {authMiddleware} from './middleware/auth.js';
 
 export const app = express();
 
@@ -11,6 +12,8 @@ app.use(express.json());
 app.get('/health', (_req, res) => {
   res.status(200).send('OK');
 });
+
+app.use(authMiddleware);
 
 // Mount routes
 app.use('/api/workspaces', workspaceRoutes);

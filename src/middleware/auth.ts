@@ -1,6 +1,6 @@
-import {Request, Response, NextFunction} from 'express'
+import {Request, Response, NextFunction, RequestHandler} from 'express'
 import { createClient } from '@supabase/supabase-js'
-import { DatabaseUser } from '../types'
+import { DatabaseUser } from '../types/index.js'
 import { User } from '@supabase/supabase-js';
 import dotenv from 'dotenv'
 
@@ -15,12 +15,13 @@ interface AuthRequest extends Request {
     user?:User
 }
 
-async function auth(req:AuthRequest, res:Response, next:NextFunction){
+export const authMiddleware:RequestHandler = async (req:AuthRequest, res:Response, next:NextFunction)=>{
     //check header
     const token = req.headers.authorization?.replace('Bearer ', '');
 
     if (!token) {
-            return res.status(401).json({ error: 'No authorization token provided.' });
+        res.status(401).json({ error: 'No authorization token provided.' });
+        return
     }
     
     try{
@@ -30,14 +31,16 @@ async function auth(req:AuthRequest, res:Response, next:NextFunction){
 
         //get database user info
         if (error || !user) {
-                return res.status(401).json({ error: 'Invalid or expired token.' });
+                res.status(401).json({ error: 'Invalid or expired token.' });
+                return 
             }
 
         req.user = user; 
         next(); 
     }catch(error){
         console.error('Auth middleware error:', error);
-        return res.status(500).json({ error: 'Internal server error during authentication.' });
+         res.status(500).json({ error: 'Internal server error during authentication.' });
+         return 
     }
 
 
