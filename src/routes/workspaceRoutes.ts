@@ -159,5 +159,64 @@ router.post('/:workspaceId/submissions', async(req:Request, res:any)=>{
     res.status(201).json({success:true, data:submission})
 })
 
+router.post('/workspaces/:workspaceId/submissions/:submissionId/approve', async(req:Request,res:any)=>{
+    const user = req.user!
+    const { workspaceId, submissionId } = req.params
+
+    //check if the user has access
+    const hasAccess = await db.workspaces.findFirst({
+        where:{
+            id:workspaceId,
+            OR:[
+                {creator_id:user.id}
+            ]
+        }
+    })
+
+    if (!hasAccess) {
+        res.status(403).json({ error: 'Access denied: Not the owner of this workspace.' });
+        return
+    }
+
+    const updated = await db.submissions.update({
+            where:{id:submissionId},
+            data:{
+                status:"approved"
+            }
+        })
+
+        return res.status(200).json({ success: true, data: updated });
+})
+
+
+router.post('/workspaces/:workspaceId/submissions/:submissionId/reject', async(req:Request,res:any)=>{
+    const user = req.user!
+    const { workspaceId, submissionId } = req.params
+
+    //check if the user has access
+    const hasAccess = await db.workspaces.findFirst({
+        where:{
+            id:workspaceId,
+            OR:[
+                {creator_id:user.id}
+            ]
+        }
+    })
+
+    if (!hasAccess) {
+        res.status(403).json({ error: 'Access denied: Not the owner of this workspace.' });
+        return
+    }
+
+    const updated = await db.submissions.update({
+            where:{id:submissionId},
+            data:{
+                status:"rejected"
+            }
+        })
+
+        return res.status(200).json({ success: true, data: updated });
+})
+
 
 export default router;
