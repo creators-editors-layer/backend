@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors'
 import workspaceRoutes from './routes/workspaceRoutes.js';
 import {authMiddleware} from './middleware/auth.js';
-
+import youtbeAuth from './routes/youtubeRoutes.js'
 
 export const app = express();
 
@@ -14,7 +14,9 @@ app.get('/health', (_req, res) => {
   res.status(200).send('OK');
 });
 
+app.use('/api/oauth', youtbeAuth)
 // Mount routes
 app.use('/api/workspaces',authMiddleware, workspaceRoutes);
+
 
 export default app

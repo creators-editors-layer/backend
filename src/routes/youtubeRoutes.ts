@@ -2,10 +2,10 @@ import { Router } from 'express';
 import { google } from 'googleapis';
 import dotenv from 'dotenv';
 dotenv.config();
-import { db } from 'src/db/index.js';
+import { db } from '../db/index.js';
 const router = Router();
 import { Request } from 'express';
-
+import { authMiddleware } from '../middleware/auth.js';
 const oauth2Client = new google.auth.OAuth2(
   process.env.YOUTUBE_CLIENT_ID,
   process.env.YOUTUBE_CLIENT_SECRET,
@@ -21,7 +21,7 @@ router.get('/auth/youtube', (req,res)=>{
     res.redirect(authUrl)
 })
 
-router.get('/oauth2callback', async(req:Request, res:any)=>{
+router.get('/oauth2callback',authMiddleware, async(req:Request, res:any)=>{
     try {
         const user = req.user
         const { code } = req.query;
@@ -44,3 +44,5 @@ router.get('/oauth2callback', async(req:Request, res:any)=>{
     return res.status(200).json({ message: "YouTube connected successfully." });
 
 })
+
+export default router
