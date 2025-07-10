@@ -2,6 +2,9 @@ import { Router } from 'express';
 import { google } from 'googleapis';
 import dotenv from 'dotenv';
 dotenv.config();
+console.log('YOUTUBE_CLIENT_ID:', process.env.YOUTUBE_CLIENT_ID);
+console.log('YOUTUBE_CLIENT_SECRET:', process.env.YOUTUBE_CLIENT_SECRET);
+console.log('YOUTUBE_REDIRECT_URI:', process.env.YOUTUBE_REDIRECT_URI);
 import { db } from '../db/index.js';
 const router = Router();
 import { Request } from 'express';
@@ -18,7 +21,7 @@ const oauth2Client = new google.auth.OAuth2(
 router.get('/youtube', (req,res)=>{
     const authUrl = oauth2Client.generateAuthUrl({
         access_type:'offline',
-        scope:['https://www.googleapis.com/auth/youtube.upload']
+        scope:['https://www.googleapis.com/auth/youtube.upload', 'https://www.googleapis.com/auth/youtube.force-ssl','https://www.googleapis.com/auth/youtube.readonly','https://www.googleapis.com/auth/youtube.readonly']
     })
 
     res.redirect(authUrl)
@@ -62,8 +65,10 @@ const channelName = channel.snippet.title;
             }
         })
 
-        res.status(200).json(`${process.env.FRONTEND_URL}/auth/youtubecallback`);
+        res.status(200).json(`${process.env.FRONTEND_URL}/dashboard/org-add?auth=success&channel=${channelName}`);
     }catch(error){
+
+        console.error("YouTube OAuth Callback Error:", error);
         res.status(500).json(`${process.env.FRONTEND_URL}/dashboard/org-add?auth=error`);
     }
 
