@@ -219,5 +219,116 @@ router.post('/workspaces/:workspaceId/submissions/:submissionId/reject', async(r
         return res.status(200).json({ success: true, data: updated });
 })
 
+// Search users by email
+router.get('/:workspaceId/search-users', async(req:Request, res:any)=>{
+    const user = req.user!
+    const { workspaceId } = req.params
+    const { email } = req.query
+
+    // Check if user has access to workspace
+    const hasAccess = await db.workspaces.findFirst({
+        where:{
+            id:workspaceId,
+            OR:[
+                {creator_id:user.id},
+                {workspace_members:{some:{user_id:user.id}}}
+            ]
+        }
+    })
+
+    if (!hasAccess) {
+        return res.status(403).json({ error: 'Access denied: Not a member of this workspace.' });
+    }
+
+    // Search user by email
+    const foundUser = await db.users.findFirst({
+        where:{
+            email: email as string
+        },
+        select:{
+            id: true,
+            email: true,
+            name: true
+        }
+    })
+
+    if (!foundUser) {
+        return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({ success: true, data: foundUser });
+})
+
+// Add editor to workspace
+router.post('/:workspaceId/add', async(req:Request, res:any)=>{
+    const user = req.user!
+    const { workspaceId } = req.params
+    const { userId } = req.body
+
+    // Check if user is workspace owner
+    const isOwner = await db.workspaces.findFirst({
+        where:{
+            id:workspaceId,
+            creator_id:user.id
+        }
+    })
+
+    if (!isOwner) {
+        return res.status(403).json({ error: 'Access denied: Only workspace owner can invite editors.' });
+    }
+
+    // Check if user is already a member
+    const isMember = await db.workspace_members.findFirst({
+        where:{
+            workspace_id:workspaceId,
+            user_id:userId
+        }
+    })
+
+    if (isMember) {
+        return res.status(409).json({ error: 'User is already a member of this workspace.' });
+    }
+
+    // Add user to workspace
+    await db.workspace_members.create({
+        data:{
+            workspace_id:workspaceId,
+            user_id:userId
+        }
+    })
+
+    return res.status(200).json({ success: true, message: 'User added to workspace successfully.' });
+})
+
+// Remove editor from workspace
+router.delete('/:workspaceId/remove', async(req:Request, res:any)=>{
+    const user = req.user!
+    const { workspaceId } = req.params
+    const { userId } = req.body
+
+    // Check if user is workspace owner
+    const isOwner = await db.workspaces.findFirst({
+        where:{
+            id:workspaceId,
+            creator_id:user.id
+        }
+    })
+
+    if (!isOwner) {
+        return res.status(403).json({ error: 'Access denied: Only workspace owner can remove editors.' });
+    }
+
+    // Remove user from workspace
+    await db.workspace_members.deleteMany({
+        where:{
+            workspace_id:workspaceId,
+            user_id:userId
+        }
+    })
+
+    return res.status(200).json({ success: true, message: 'User removed from workspace successfully.' });
+})
+
+
 
 export default router;

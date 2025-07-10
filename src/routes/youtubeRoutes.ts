@@ -64,7 +64,7 @@ const channelName = channel.snippet.title;
 
         res.status(200).json(`${process.env.FRONTEND_URL}/auth/youtubecallback`);
     }catch(error){
-        res.status(200).json(`${process.env.FRONTEND_URL}/dashboard/org-add?auth=error`);
+        res.status(500).json(`${process.env.FRONTEND_URL}/dashboard/org-add?auth=error`);
     }
 
 })
