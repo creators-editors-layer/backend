@@ -1,0 +1,27 @@
+//this is a fancy way to document new things i learn while building this project
+
+Jul 1
+finished db integration and schema design
+i should create a branch and start building CRUD operations for workspaces 
+
+and this is how we do it:
+git fetch origin
+git checkout main
+git pull origin main
+git checkout -b feature/workspace-crud
+
+NOTE: include prisma generate in you build script
+
+creating endpoints to for workspace and learned you need to create these piece of shits for api response:
+export interface ApiSuccess<T> {
+  success: true;
+  data: T;
+}
+
+export interface ApiError {
+  success: false;
+  error: {
+    message: string;
+    code?: number;
+  };
+}

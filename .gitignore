@@ -1,0 +1,32 @@
+# Node.js dependencies
+/node_modules/
+
+# TypeScript build output
+/dist/
+/build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# VSCode settings
+.vscode/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Prisma
+prisma/.env          # if present
+prisma/dev.db        # local SQLite file if you ever used SQLite
+/src/generated/prisma
+
+# OS files
+.DS_Store
+
+
+getToken.js
+
+/generated/prisma
