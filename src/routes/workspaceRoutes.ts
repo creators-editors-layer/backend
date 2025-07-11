@@ -331,4 +331,44 @@ router.delete('/:workspaceId/remove', async(req:Request, res:any)=>{
 
 
 
+// Get all members of a workspace
+router.get('/:workspaceId/members', async(req:Request, res:any)=>{
+    const user = req.user!
+    const { workspaceId } = req.params
+
+    // Check if user has access to workspace
+    const hasAccess = await db.workspaces.findFirst({
+        where:{
+            id:workspaceId,
+            OR:[
+                {creator_id:user.id},
+                {workspace_members:{some:{user_id:user.id}}}
+            ]
+        }
+    })
+
+    if (!hasAccess) {
+        return res.status(403).json({ error: 'Access denied: Not a member of this workspace.' });
+    }
+
+    const members = await db.workspace_members.findMany({
+        where:{
+            workspace_id:workspaceId
+        },
+        include:{
+            users:{
+                select:{
+                    id:true,
+                    email:true,
+                    name:true
+                }
+            }
+        }
+    })
+
+    const workspaceUsers = members.map(member => member.users);
+
+    return res.status(200).json({ success: true, data: workspaceUsers });
+})
+
 export default router;
