@@ -78,11 +78,7 @@ const channelName = channel.snippet.title;
             }
         })
 
-<<<<<<< HEAD
-        res.status(200).json(`${process.env.FRONTEND_URL}/dashboard/org-add?auth=success`);
-=======
         res.status(200).json(`${process.env.FRONTEND_URL}/dashboard/org-add?auth=success&channel=${channelName}`);
->>>>>>> 188b1d74a1cc1cf62346e755cc749c22a4ea71df
     }catch(error){
 
         console.error("YouTube OAuth Callback Error:", error);
