@@ -15,19 +15,28 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.YOUTUBE_REDIRECT_URI
 );
 
+
+
 router.get('/youtube', (req,res)=>{
     const authUrl = oauth2Client.generateAuthUrl({
         access_type:'offline',
-        scope:['https://www.googleapis.com/auth/youtube.upload']
+        scope:['https://www.googleapis.com/auth/youtube.readonly']
     })
 
-    res.redirect(authUrl)
+    console.log("Client ID:", process.env.YOUTUBE_CLIENT_ID);
+console.log("Client Secret:", process.env.YOUTUBE_CLIENT_SECRET);
+console.log("Redirect URI:", process.env.YOUTUBE_REDIRECT_URI)
+
+    console.log("Generated Auth URL:", authUrl); // Add this line
+    res.redirect(authUrl);
 })
 
 router.get('/oauth2callback',authMiddleware, async(req:Request, res:any)=>{
     try {
         const user = req.user
         const { code } = req.query;
+
+        console.log(code)
         const {tokens} = await oauth2Client.getToken(code as string)
         oauth2Client.setCredentials(tokens)
 
@@ -62,7 +71,7 @@ const channelName = channel.snippet.title;
             }
         })
 
-        res.status(200).json(`${process.env.FRONTEND_URL}/auth/youtubecallback`);
+        res.status(200).json(`${process.env.FRONTEND_URL}/dashboard/org-add?auth=success`);
     }catch(error){
         res.status(500).json(`${process.env.FRONTEND_URL}/dashboard/org-add?auth=error`);
     }

@@ -7,7 +7,14 @@ import uploadRoute from './routes/uploadRoute.js';
 
 export const app = express();
 
-app.use(cors());
+const corsOptions = {
+  origin: 'http://localhost:3002', // Your frontend URL
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Health check
